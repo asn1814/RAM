@@ -30,7 +30,9 @@ You can begin using this new class by simply altering your training configuratio
 
 ### Components of the loss function
 Consider the loss function proposed as [SimPO](https://arxiv.org/abs/2405.14734) where the loss $\mathcal{L}$ on model $\pi_\theta$ is defined as 
-$$\mathcal{L}_{\text{SimPO}}(\pi_\theta)=-\mathbb{E}_{(x,y_w,y_l) \sim \mathcal{D}}\left[\log \sigma \left( \frac{\beta}{|y_w|} \log \pi_\theta (y_w | x) - \frac{\beta}{|y_l|} \log \pi_\theta (y_l | x) - \gamma \right) \right]$$
+```math
+\mathcal{L}_{\text{SimPO}}(\pi_\theta)=-\mathbb{E}_{(x,y_w,y_l) \sim \mathcal{D}}\left[\log \sigma \left( \frac{\beta}{|y_w|} \log \pi_\theta (y_w | x) - \frac{\beta}{|y_l|} \log \pi_\theta (y_l | x) - \gamma \right) \right]
+```
 We implement this loss function in `fairseq2/src/fairseq2/recipes/lm/preference_finetune/simpo.py`. It contains the following:
 - `SimPOFinetuneUnit` defines the loss. It holds the loss hyperparameters $\beta$ and $\gamma$, as well as an option for NLL loss to be added to the loss computation and the `TrainUnit`'s metric bag. 
     - `__init__` initializes the model, stores the hyperparameters, and initializes the metric bag. 
@@ -54,20 +56,28 @@ criterion_config:
 Examples of full configuration files for different loss functions are given in [`../example_configurations`](../example_configurations).
 
 ### Normalizing the Loss
-If we were only returning SimPO loss and not attempting to add NLL loss to it as well, then normalization would be easy: we would return the sum of SimPO losses from the batch, along with the batch size to normalize by. Let $R$ be the set of ranks, where for any rank $r$, $b_r$ is the total batch size of $r$, $t_r$ is the total tokens of $r$, and ${\mathcal{L}_{\text{x}}}_r$ is the total $\mathcal{L}_{\text{x}}$ loss of $r$. Then the $\mathcal{L}_{\text{SimPO}}$ across all ranks would be 
-$$\mathcal{L}_{\text{SimPO}} = \frac{\displaystyle\sum_{r \in R}{\mathcal{L}_{\text{SimPO}}}_r}{\displaystyle\sum_{r \in R}b_r}$$ 
+If we were only returning SimPO loss and not attempting to add NLL loss to it as well, then normalization would be easy: we would return the sum of SimPO losses from the batch, along with the batch size to normalize by. Let $R$ be the set of ranks, where for any rank $r$, $b_r$ is the total batch size of $r$, $t_r$ is the total tokens of $r$, and $`{\mathcal{L}_{\text{x}}}_r`$ is the total $`\mathcal{L}_{\text{x}}`$ loss of $`r`$. Then the $`\mathcal{L}_{\text{SimPO}}`$ across all ranks would be 
+```math
+\mathcal{L}_{\text{SimPO}} = \frac{\displaystyle\sum_{r \in R}{\mathcal{L}_{\text{SimPO}}}_r}{\displaystyle\sum_{r \in R}b_r}
+```
 This would be implemented by returning `simpo_loss, chosen_target_batch.batch_size` from `__call__` and works perfectly.
 
-However, we implement functionality to return both the SimPO loss *and* the NLL loss ($\mathcal{L}_{\text{SimPO}} + \mathcal{L}_{\text{NLL}}$). Ideally, we want this: 
-$$\mathcal{L}_{\text{SimPO}} + \mathcal{L}_{\text{NLL}} = \frac{\displaystyle\sum_{r \in R}{\mathcal{L}_{\text{SimPO}}}_r}{\displaystyle\sum_{r \in R}b_r} + \frac{\displaystyle\sum_{r \in R}{\mathcal{L}_{\text{NLL}}}_r}{\displaystyle\sum_{r \in R}t_r}$$
+However, we implement functionality to return both the SimPO loss *and* the NLL loss ($`\mathcal{L}_{\text{SimPO}} + \mathcal{L}_{\text{NLL}}`$). Ideally, we want this: 
+```math
+\mathcal{L}_{\text{SimPO}} + \mathcal{L}_{\text{NLL}} = \frac{\displaystyle\sum_{r \in R}{\mathcal{L}_{\text{SimPO}}}_r}{\displaystyle\sum_{r \in R}b_r} + \frac{\displaystyle\sum_{r \in R}{\mathcal{L}_{\text{NLL}}}_r}{\displaystyle\sum_{r \in R}t_r}
+```
 
 But we can only pass back one loss value from each rank and one number of target value from each rank. This is one solution to approximate that:
-$$\mathcal{L}_{\text{SimPO}} + \mathcal{L}_{\text{NLL}} = \frac{\displaystyle\sum_{r \in R}{\mathcal{L}_{\text{SimPO}}}_r + \frac{b_r}{t_r} {\mathcal{L}_{\text{NLL}}}_r}{\displaystyle\sum_{r \in R}b_r} \approx \frac{\displaystyle\sum_{r \in R}{\mathcal{L}_{\text{SimPO}}}_r}{\displaystyle\sum_{r \in R}b_r} + \displaystyle\sum_{r \in R}{\frac{1}{|R|t_r} {\mathcal{L}_{\text{NLL}}}_r} \approx \frac{\displaystyle\sum_{r \in R}{\mathcal{L}_{\text{SimPO}}}_r}{\displaystyle\sum_{r \in R}b_r} + \frac{\displaystyle\sum_{r \in R}{\mathcal{L}_{\text{NLL}}}_r}{\displaystyle\sum_{r \in R}t_r}$$
+```math
+\mathcal{L}_{\text{SimPO}} + \mathcal{L}_{\text{NLL}} = \frac{\displaystyle\sum_{r \in R}{\mathcal{L}_{\text{SimPO}}}_r + \frac{b_r}{t_r} {\mathcal{L}_{\text{NLL}}}_r}{\displaystyle\sum_{r \in R}b_r} \approx \frac{\displaystyle\sum_{r \in R}{\mathcal{L}_{\text{SimPO}}}_r}{\displaystyle\sum_{r \in R}b_r} + \displaystyle\sum_{r \in R}{\frac{1}{|R|t_r} {\mathcal{L}_{\text{NLL}}}_r} \approx \frac{\displaystyle\sum_{r \in R}{\mathcal{L}_{\text{SimPO}}}_r}{\displaystyle\sum_{r \in R}b_r} + \frac{\displaystyle\sum_{r \in R}{\mathcal{L}_{\text{NLL}}}_r}{\displaystyle\sum_{r \in R}t_r}
+```
 This is implemented by returning `simpo_loss + nll_loss * chosen_target_batch.batch_size / chosen_target_batch.num_target_elements(), chosen_target_batch.batch_size` from `__call__`.
 This has correct expectation if the batches are random. However, due to dynamic batching, some batches will have a greater number of shorter sequences and some batches will have a lesser number of longer sequences. As a result, this normalization strategy will give more weight to longer sequences due to dynamic batching. 
 
 Another potential strategy is to normalize locally on each rank and then average the ranks. This can be expressed as 
-$$\mathcal{L}_{\text{SimPO}} + \mathcal{L}_{\text{NLL}} = \frac{\displaystyle\sum_{r \in R}\left( \frac{{\mathcal{L}_{\text{SimPO}}}_r}{b_r} + \frac{{\mathcal{L}_{\text{NLL}}}_r}{t_r} \right)}{|R|}$$
+```math
+\mathcal{L}_{\text{SimPO}} + \mathcal{L}_{\text{NLL}} = \frac{\displaystyle\sum_{r \in R}\left( \frac{{\mathcal{L}_{\text{SimPO}}}_r}{b_r} + \frac{{\mathcal{L}_{\text{NLL}}}_r}{t_r} \right)}{|R|}
+```
 This is implemented by returning `simpo_loss / chosen_target_batch.batch_size + nll_loss / chosen_target_batch.num_target_elements(), None` from `__call__`.
 This has correct expectation if the batches are random. However, due to dynamic batching, some batches will have a greater number of shorter sequences and some batches will have a lesser number of longer sequences. As a result, this normalization strategy will give more weight to longer sequences due to dynamic batching. 
 
