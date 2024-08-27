@@ -20,7 +20,7 @@
 #SBATCH --tasks-per-node=8
 #SBATCH --gpus-per-node=8
 #SBATCH --constraint=volta32gb
-#SBATCH --partition=learnlab,learnfair
+#SBATCH --partition=dummy_partition
 #SBATCH --time 01:00:00
 
 ### setup to get the reference and model outputs

@@ -21,7 +21,7 @@ For each evaluation, you need reference outputs and model outputs. Both can be g
 Config files to annotate and evaluate models using Llama 3.1 70b Instruct, Llama 3.1 8b Instruct, and Llama 3 8b Instruct are provided. To use a different model as an annotator/evaluator, see the section on creating a new evaluator below. **For Llama 3.1 70b Instruct, run on 8 V100 GPUs with 32GB RAM each (`--constaint=volta32gb`)to prevent OOM.**
 
 > [!NOTE]
-> The provided Llama 3.1 70b Instruct annotator running locally on V100s gets 68.56 human agreement (humans get 65.66 human agreement), which makes it better than human annotators and nearly reaches the best GPT4 performance. For a full breakdown of the implementation compared to other annotators, see `evaluator_configs/llama3.1_70b_instruct/leaderboard.csv`. Llama 3.1 8b Instruct gets 65.09 human agreement, and Llama 3 8b Instruct gets 63.08 human agreement. However, there is some indication that these annotators may favor Llama-based models. 
+> The provided Llama 3.1 70b Instruct annotator running locally on V100s gets 68.56 human agreement (humans get 65.66 human agreement), which makes it better than human annotators and nearly reaches the best GPT4 performance. Llama 3.1 8b Instruct gets 65.09 human agreement, and Llama 3 8b Instruct gets 63.08 human agreement. However, there is some indication that these annotators may favor Llama-based models. 
 
 For any annotator, we create a leaderboard that tracks how well various models perform against each other when evaluated by that annotator. To evaluate outputs with the annotator, use 
 ```bash
