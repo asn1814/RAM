@@ -1,0 +1,19 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree.
+
+Meta-Llama-3.1-8B-Instruct:
+  prompt_template: "llama3.1_8b_instruct/llama3.1_8b_instruct_prompt.txt"
+  fn_completions: "vllm_local_completions"
+  completions_kwargs:
+    model_name: # filepath to Llama 3.1 8B Instruct in HuggingFace format here
+    max_new_tokens: 32
+    temperature: 0
+    model_kwargs:
+      dtype: "half"
+      tensor_parallel_size: 4
+      enable_chunked_prefill: False
+      max_model_len: 5120
+  fn_completion_parser: "ranking_parser"
