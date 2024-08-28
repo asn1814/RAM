@@ -1,11 +1,11 @@
 # Building Loss Functions for LM Preference Finetuning
-This guide covers building loss variants for fairseq2's lm preference finetuning recipe. It covers the [SimPO](https://arxiv.org/abs/2405.14734) implementation at `fairseq2/src/fairseq2/recipes/lm/preference_finetune/simpo.py` as a case study. 
+This guide covers building loss variants for fairseq2's lm preference finetuning recipe. It covers the [SimPO](https://arxiv.org/abs/2405.14734) implementation at [`fairseq2/src/fairseq2/recipes/lm/preference_finetune/simpo.py`](https://github.com/facebookresearch/fairseq2/blob/main/src/fairseq2/recipes/lm/preference_finetune/simpo.py) as a case study. 
 
 ### Pre-requisites
-To implement your loss function in fairseq2, follow the instructions at `fairseq2/CONTRIBUTING.md` to install the fairseq2 package in editable mode. 
+To implement your loss function in fairseq2, follow the instructions at [`fairseq2/CONTRIBUTING.md`](https://github.com/facebookresearch/fairseq2/blob/main/CONTRIBUTING.md) to install the fairseq2 package in editable mode. 
 
 ## Overview
-fairseq2's registries allow new loss functions to be created in a single file and called from the command line or config file without needing to alter any other code. Loss functions that have already been implemented can be found at `fairseq2/src/fairseq2/recipes/lm/preference_finetune/{dpo.py, simpo.py, ...}`. To create your own, you can just implement another file. 
+fairseq2's registries allow new loss functions to be created in a single file and called from the command line or config file without needing to alter any other code. Loss functions that have already been implemented can be found at [`fairseq2/src/fairseq2/recipes/lm/preference_finetune/{dpo.py, simpo.py, ...}`](https://github.com/facebookresearch/fairseq2/tree/main/src/fairseq2/recipes/lm/preference_finetune). To create your own, you can just implement another file. 
 
 ## How-to
 
@@ -21,7 +21,7 @@ This new file should have the following components.
 - A call to `register_metric_formatter` defining how your loss should be named and formatted when logged. 
 - A metric bag class that extends `SequenceMetricBag` to log metrics. This should implement a loss value and a function to update the stored loss value that will be called by the train unit class when computing loss. For the DPO implementation, this is `DPOFinetuneMetricBag`.
 - A configuration dataclass that defines the parameters used by the loss function. For the DPO implementation, this is `DPOConfig`. This class is used by the configuration file passed to the CLI to specify hyperparameters for training.
-- A factory function decorated with the `@preference_unit_factory(name)` decorator where `name` is an appropriate name for the loss. `name` will be what is placed in the `criterion` parameter of the training configuration file to specify training with this loss function. For the DPO implementation, this is `create_dpo_unit`. This should take your config class, model `Module`, root gang `Gang`, and gangs `Mapping[str, Gang]` and return the `TrainUnit[PreferenceOptimizationBatch]` you implemented. If the loss implementation requires a reference model, it should be loaded here (use `fairseq2.recipes.lm.preference_finetune.utils._load_reference_model` for easy loading).
+- A factory function decorated with the `@preference_unit_factory(name)` decorator where `name` is an appropriate name for the loss. `name` will be what is placed in the `criterion` parameter of the training configuration file to specify training with this loss function. For the DPO implementation, this is `create_dpo_unit`. This should take your config class, model `Module`, root gang `Gang`, and gangs `Mapping[str, Gang]` and return the `TrainUnit[PreferenceOptimizationBatch]` you implemented. If the loss implementation requires a reference model, it should be loaded here (use [`fairseq2.recipes.lm.preference_finetune.utils._load_reference_model`](https://github.com/facebookresearch/fairseq2/blob/main/src/fairseq2/recipes/lm/preference_finetune/utils.py) for easy loading).
 
 ### Using the loss function
 You can begin using this new class by simply altering your training configuration file. Set the `criterion` parameter to the `name` given to your `preference_unit_factory`. Set the `criterion_config` parameter's `_type_` parameter to the import path of your configuration dataclass, and its other parameter names to the parameters of that dataclass. The SimPO walkthrough below provides an example. More examples can be found in [`../example_configurations`](../example_configurations).
@@ -33,7 +33,7 @@ Consider the loss function proposed as [SimPO](https://arxiv.org/abs/2405.14734)
 ```math
 \mathcal{L}_{\text{SimPO}}(\pi_\theta)=-\mathbb{E}_{(x,y_w,y_l) \sim \mathcal{D}}\left[\log \sigma \left( \frac{\beta}{|y_w|} \log \pi_\theta (y_w | x) - \frac{\beta}{|y_l|} \log \pi_\theta (y_l | x) - \gamma \right) \right]
 ```
-We implement this loss function in `fairseq2/src/fairseq2/recipes/lm/preference_finetune/simpo.py`. It contains the following:
+We implement this loss function in [`fairseq2/src/fairseq2/recipes/lm/preference_finetune/simpo.py`](https://github.com/facebookresearch/fairseq2/blob/main/src/fairseq2/recipes/lm/preference_finetune/simpo.py). It contains the following:
 - `SimPOFinetuneUnit` defines the loss. It holds the loss hyperparameters $\beta$ and $\gamma$, as well as an option for NLL loss to be added to the loss computation and the `TrainUnit`'s metric bag. 
     - `__init__` initializes the model, stores the hyperparameters, and initializes the metric bag. 
     - `__call__` computes the loss over a `PreferenceBatch`. For each $y$, `_gather_lprobs` computes $\frac{\log \pi_\theta (y | x)}{|y|}$. `_compute_simpo_loss` takes each and returns the loss $\mathcal{L}_{\text{SimPO}}$. `chosen_output.compute_loss` gets the NLL loss. Then we update the metric bag to record the losses. Deciding how to return the loss and batch size to be summed and normalized across all ranks by the `Trainer` is usually easy but can be tricky. See the section "Normalizing the Loss" below for a breakdown. 
