@@ -1,8 +1,11 @@
 # Preference Optimization Finetuning for Language Models with fairseq2
-Preference optimization is a finetuning strategy that uses a dataset of $(x, y_w, y_l)$ pairs where $x$ is a prompt, $y_w$ is a preferred completion for that prompt, and $y_l$ is a dispreferred completion for that prompt. fairseq2 provides recipes to finetune language models using these datasets. 
+Preference optimization is a finetuning strategy that uses a dataset of $(x, y_w, y_l)$ pairs where $x$ is a prompt, $y_w$ is a preferred completion for that prompt, and $y_l$ is a dispreferred completion for that prompt. fairseq2 provides recipes to finetune language models using these datasets and various preference optimization criteria. Finally, fairseq2 provides a way to extend the recipe with your own optimization criterion with minimum efforts. 
 
 ### Pre-requisites and Installation
-You should have fairseq2 installed and your fairseq2 environment ready. You can quickly test that your environment is working with the command `fairseq2 assets list`. 
+
+**Environment:** You should have fairseq2 installed and your fairseq2 environment ready. Follow the installation guide in fairseq2 repo. 
+
+**Hardware:** Experiments described below were tested using 8-gpu node with Nvidia A100 GPUs.
 
 ## Contents
 - [The Overview](OVERVIEW.md): a high level guide that walks through how everything fits together. Read this to quickly gain a better general understanding of the preference optimization recipes.
@@ -14,4 +17,4 @@ You should have fairseq2 installed and your fairseq2 environment ready. You can 
 - [Example Dataset Scripts](datasets/): example dataset preparation scripts to create data files and asset cards.
 
 ## Get Started
-Once you've set up and activated your fairseq2 environment, you can get started immediately by running `./quick-start.sh`. This creates a preference dataset from OpenAssistant2 and begins trainining Llama 3 8B with DPO. 
+Once you've set up and activated your fairseq2 environment, you can get started immediately by running [quick-start.sh](./quick-start.sh). This creates a preference dataset from OpenAssistant2 and begins trainining Llama 3 8B with DPO. 
