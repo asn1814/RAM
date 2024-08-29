@@ -4,7 +4,7 @@ max_num_tokens: 8192
 example_shuffle_window: 10000
 batch_shuffle_window: 1000
 num_prefetch: 4
-model: step_100
+model: checkpoint_step_100
 resume_checkpoint_dir: dummy/path/to/checkpoints/dir
 dtype: bfloat16
 data_parallelism: fsdp
@@ -43,7 +43,7 @@ anomaly_detection: false
 criterion: dpo
 criterion_config:
   _type_: fairseq2.recipes.lm.preference_finetune.dpo.DpoConfig
-  reference_model: llama3_8b
+  reference_model: checkpoint_step_100
   reference_dtype: bfloat16
   reference_tensor_parallel_size: 1
   beta: 0.1
