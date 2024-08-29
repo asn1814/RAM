@@ -12,5 +12,5 @@ OUTPUT_DIR=./example_dpo_training_output/${SLURM_JOB_ID}
 ## CONFIG_FILE specifies the training configuration
 CONFIG_FILE=../example_configurations/example_dpo_config.yaml
 
-### Run the job locally with torchrun. 
+### Run the job locally with torchrun. Adjust --nproc-per-node to the number of gpus that are available
 torchrun --standalone --nproc-per-node 8 --no-python fairseq2 lm preference_finetune ${OUTPUT_DIR} --config-file ${CONFIG_FILE} --no-sweep-dir

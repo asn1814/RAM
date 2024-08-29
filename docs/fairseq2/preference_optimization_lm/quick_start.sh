@@ -12,6 +12,8 @@
 #               environment active on a node with sufficient GPUs
 #################################################################################
 
+NUM_GPUS=8 # adjust to the number of gpus that are available
+
 # get fairseq2_ram/docs/preference_optimization_lm
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
@@ -30,18 +32,8 @@ export FAIRSEQ2_ASSET_DIR=${CARD_DIR}
 CONFIG_YAML=${SCRIPT_DIR}/example_configurations/example_dpo_config.yaml
 OUTPUT_DIR=${SCRIPT_DIR}/quick_start_dpo_training_output/
 
-torchrun --standalone --nproc-per-node 8 --no-python fairseq2 lm preference_finetune ${OUTPUT_DIR} --config-file ${CONFIG_YAML} --config dataset=openassistant2_preference_llama3_train --no-sweep-dir
+torchrun --standalone --nproc-per-node ${NUM_GPUS} --no-python fairseq2 lm preference_finetune ${OUTPUT_DIR} --config-file ${CONFIG_YAML} --config dataset=openassistant2_preference_llama3_train --no-sweep-dir
 echo Training finished!
-
-# convert model to huggingface
-echo Begin conversion to HuggingFace format
-FS2_TO_HF_PY=${SCRIPT_DIR}/../../ckpt_convert_fairseq2_hf.py
-CHECKPOINT_PATH=${OUTPUT_DIR}/checkpoints/last_step
-SAVE_PATH=${OUTPUT_DIR}/huggingface_saves/last_step
-ARCH=llama3_8b
-
-python ${FS2_TO_HF_PY} --fairseq2_train_ckpt_dir ${CHECKPOINT_PATH} --save_path ${SAVE_PATH} --arch ${ARCH} 
-echo Conversion to HuggingFace format finished!
 
 # see metrics with tensorboard
 echo Start Tensorboard

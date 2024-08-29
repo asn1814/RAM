@@ -26,5 +26,5 @@ OUTPUT_DIR=./example_dpo_training_output/${SLURM_JOB_ID}
 ## CONFIG_FILE specifies the training configuration
 CONFIG_FILE=../example_configurations/example_dpo_config.yaml
 
-### Run the job. 
+### Run the job. fairseq2 automatically determines number of available GPUs and initialize process groups when started using `srun`. 
 srun fairseq2 lm preference_finetune ${OUTPUT_DIR} --config-file ${CONFIG_FILE} --no-sweep-dir

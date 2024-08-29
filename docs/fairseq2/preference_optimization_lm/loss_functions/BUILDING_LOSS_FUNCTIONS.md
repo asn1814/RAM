@@ -5,7 +5,7 @@ This guide covers building loss variants for fairseq2's lm preference finetuning
 To implement your loss function in fairseq2, follow the instructions at [`fairseq2/CONTRIBUTING.md`](https://github.com/facebookresearch/fairseq2/blob/main/CONTRIBUTING.md) to install the fairseq2 package in editable mode. 
 
 ## Overview
-fairseq2's registries allow new loss functions to be created in a single file and called from the command line or config file without needing to alter any other code. Loss functions that have already been implemented can be found at [`fairseq2/src/fairseq2/recipes/lm/preference_finetune/{dpo.py, simpo.py, ...}`](https://github.com/facebookresearch/fairseq2/tree/main/src/fairseq2/recipes/lm/preference_finetune). To create your own, you can just implement another file. 
+fairseq2's registries allow new loss functions to be created in a single file and called from the command line or config file without needing to alter any other code. Loss functions that have already been implemented can be found at [`fairseq2/src/fairseq2/recipes/lm/preference_finetune/{dpo.py, simpo.py, ...}`](https://github.com/facebookresearch/fairseq2/tree/main/src/fairseq2/recipes/lm/preference_finetune). To create your own, you can create a new python file in the same directory. Additionally, fairseq2 supports writing extensions so that you do not need to change the library code, but can build your finetune units in your own codebase.
 
 ## How-to
 
