@@ -7,6 +7,7 @@
 import datetime
 import json
 import os
+import uuid
 
 from iopath.common.file_io import PathManager as _PathManager
 
@@ -14,7 +15,7 @@ PathManager = _PathManager()
 
 
 def save_to_jsonl(data, filename, write_mode="w"):
-    with open(filename, write_mode) as file:
+    with open(filename, write_mode, encoding="utf8") as file:
         for item in data:
             json_str = json.dumps(item)
             file.write(json_str + "\n")
@@ -56,3 +57,19 @@ def built(path, version_string=None):
             return len(text) > 1 and text[1] == version_string
     else:
         return PathManager.exists(os.path.join(path, ".built"))
+
+
+def map_str_to_uuid(str_to_map: str):
+    """Generate a hash for a given string using v5 UUID
+    In this case the md5 of str_to_map is computed, then some bits are truncated (for uuid namespace) and then
+    the uuid is created given the md5 as the input name.
+
+    Usage example: mapping prompts or src+tgt sequences in the dataset to a unique id.
+
+    Args:
+        str_to_map (str): string to map to an ID
+
+    Returns:
+        str: UUID converted to string
+    """
+    return str(uuid.uuid5(uuid.NAMESPACE_DNS, str_to_map))

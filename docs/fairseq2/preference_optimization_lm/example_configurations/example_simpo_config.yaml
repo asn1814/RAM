@@ -1,4 +1,4 @@
-dataset: openassistant2_preference_llama3
+dataset: openassistant2_llama3_preference_train
 max_seq_len: 1024
 max_num_tokens: 4096
 example_shuffle_window: 2000

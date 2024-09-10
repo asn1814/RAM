@@ -11,23 +11,23 @@ from string import Template
 import yaml
 from fire import Fire
 from tqdm import tqdm
-from utils import built, mark_done, save_to_jsonl
 
 from datasets import load_dataset
+from utils import built, map_str_to_uuid, mark_done, save_to_jsonl
 
 L3_START_INST = "<|start_header_id|>user<|end_header_id|>\n\n"
 L3_END_INST = "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
 
 
 def prep_data(data_dir: str, card_dir: str):
-    """Prepares a dataset of positive/negative completions from OpenAssistant2.
+    """Prepares a dataset of positive/negative completions from OpenAssistant2 and a corresponding instruction tuning dataset.
 
     Args:
         data_dir (str): The directory the raw data `.jsonl` will be written to.
         card_dir (str): The directory the `oasst2_preference_llama3.yaml` asset card will be written to.
     """
     # create dataset card
-    name = "openassistant2_preference_llama3"
+    name = "openassistant2_llama3"
     card = []
 
     # load dataset, get preference pairs
@@ -54,8 +54,8 @@ def prep_data(data_dir: str, card_dir: str):
                 _processed_samples.append(train_ex)
 
         # write data
-        version_string = f"{name}_{split_name}"
-        save_dir = Path(f"{data_dir}/{split_name}")
+        version_string = f"{name}_preference_{split_name}"
+        save_dir = Path(f"{data_dir}/preference/{split_name}")
         save_dir.resolve().mkdir(parents=True, exist_ok=True)
         if built(save_dir, version_string):
             print(
@@ -63,21 +63,66 @@ def prep_data(data_dir: str, card_dir: str):
             )
         else:
             save_to_jsonl(
-                _processed_samples, f"{data_dir}/{split_name}/data.chunk.0000.jsonl"
+                _processed_samples,
+                f"{data_dir}/preference/{split_name}/data.chunk.0000.jsonl",
             )
             mark_done(save_dir, version_string)
 
         # add path to card
         card.append(
             {
-                "name": f"{name}_{split_name}",
+                "name": f"{name}_preference_{split_name}",
                 "dataset_family": "generic_preference_optimization",
             }
         )
         card.append(
             {
-                "name": f"{name}_{split_name}@faircluster",
-                "data": str(Path(f"{data_dir}/{split_name}").resolve()),
+                "name": f"{name}_preference_{split_name}@faircluster",
+                "data": str(Path(f"{data_dir}/preference/{split_name}").resolve()),
+            }
+        )
+        # implement path in @awscluster here
+
+        # make instruction dataset
+        _instruction_samples = []
+        seen = set()
+        prevent_duplicates = False
+        for ex in _processed_samples:
+            new_ex = {"src": ex["src"], "tgt": ex["tgt_chosen"]}
+            new_ex["id"] = map_str_to_uuid(new_ex["src"] + new_ex["tgt"])
+            if prevent_duplicates:
+                if new_ex["id"] not in seen:
+                    _instruction_samples.append(new_ex)
+                    seen.add(new_ex["id"])
+            else:
+                _instruction_samples.append(new_ex)
+
+        # write data
+        version_string = f"{name}_instruction_{split_name}"
+        save_dir = Path(f"{data_dir}/instruction/{split_name}")
+        save_dir.resolve().mkdir(parents=True, exist_ok=True)
+        if built(save_dir, version_string):
+            print(
+                f"Data version {version_string} exists in {save_dir}, skipping data writing"
+            )
+        else:
+            save_to_jsonl(
+                _instruction_samples,
+                f"{data_dir}/instruction/{split_name}/data.chunk.0000.jsonl",
+            )
+            mark_done(save_dir, version_string)
+
+        # add path to card
+        card.append(
+            {
+                "name": f"{name}_instruction_{split_name}",
+                "dataset_family": "generic_instruction",
+            }
+        )
+        card.append(
+            {
+                "name": f"{name}_instruction_{split_name}@faircluster",
+                "data": str(Path(f"{data_dir}/instruction/{split_name}").resolve()),
             }
         )
         # implement path in @awscluster here
