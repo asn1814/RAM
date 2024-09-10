@@ -1,0 +1,56 @@
+dataset: openassistant2_llama3_instruction_train
+max_seq_len: 8192
+max_num_tokens: 8192
+example_shuffle_window: 10000
+batch_shuffle_window: 1000
+num_prefetch: 4
+model: llama3_1_8b
+dtype: bfloat16
+data_parallelism: fsdp
+fsdp_wrap_granularity: layer
+fsdp_reshard_after_forward: true
+tensor_parallel_size: 1
+activation_checkpointing: true
+torch_compile: false
+optimizer: adamw
+optimizer_config:
+  _type_: fairseq2.optim.factory.AdamWConfig
+  lr: 5.5e-06
+  betas:
+  - 0.9
+  - 0.95
+  eps: 1.0e-08
+  weight_decay: 0.1
+  amsgrad: false
+  maximize: false
+  capturable: false
+  differentiable: false
+  impl: auto
+  use_fp32: false
+lr_scheduler: cosine-annealing
+lr_scheduler_config:
+  _type_: fairseq2.optim.lr_scheduler.factory.CosineAnnealingLRConfig
+  cycle_len: null
+  num_warmup_steps: 0
+  cycle_mul: 1.0
+  lr_mul: 1.0
+  start_lr: 0.0
+  final_lr: 1.1e-06
+gradient_accumulation: 4
+max_gradient_norm: null
+fp16_loss_scale:
+- 128.0
+- 0.0001
+max_num_steps: 1000
+max_num_data_epochs: 10
+checkpoint_every_n_steps: 1000
+checkpoint_every_n_data_epochs: 1
+keep_last_n_checkpoints: 11
+keep_last_n_models: null
+publish_metrics_every_n_steps: 1
+publish_metrics_every_n_data_epochs: null
+resume_checkpoint_dir: null
+seed: 1814
+profile: null
+monitored_gang: false
+anomaly_detection: false
