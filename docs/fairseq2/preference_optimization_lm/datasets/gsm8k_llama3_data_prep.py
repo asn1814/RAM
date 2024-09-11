@@ -167,8 +167,7 @@ def prep_data(data_dir: str, card_dir: str, dtype: str = "auto"):
     name = "gsm8k_preference_llama3"
     card = [
         {"name": f"{name}", "dataset_family": "generic_preference_optimization"},
-        {"name": f"{name}@faircluster", "data": f"{Path(data_dir).resolve()}"},
-        # implement @awscluster here
+        {"name": f"{name}@user", "data": f"{Path(data_dir).resolve()}"},
     ]
 
     # write card to .yaml file

@@ -77,11 +77,10 @@ def prep_data(data_dir: str, card_dir: str):
         )
         card.append(
             {
-                "name": f"{name}_preference_{split_name}@faircluster",
+                "name": f"{name}_preference_{split_name}@user",
                 "data": str(Path(f"{data_dir}/preference/{split_name}").resolve()),
             }
         )
-        # implement path in @awscluster here
 
         # make instruction dataset
         _instruction_samples = []
@@ -121,11 +120,10 @@ def prep_data(data_dir: str, card_dir: str):
         )
         card.append(
             {
-                "name": f"{name}_instruction_{split_name}@faircluster",
+                "name": f"{name}_instruction_{split_name}@user",
                 "data": str(Path(f"{data_dir}/instruction/{split_name}").resolve()),
             }
         )
-        # implement path in @awscluster here
 
     # write card to .yaml file
     Path(card_dir).mkdir(parents=True, exist_ok=True)
